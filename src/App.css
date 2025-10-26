@@ -1,0 +1,55 @@
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  /* yahan width chhoti kar do */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  /* track color */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  /* thumb color */
+  border-radius: 9999px;
+  /* gol scrollbar */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  /* hover color */
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f00;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f00;
+  cursor: pointer;
+  border: none;
+}
