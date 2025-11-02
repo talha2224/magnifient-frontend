@@ -1,11 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Sun, Moon, Menu } from "lucide-react";
 import TopBarLogo from '../../../assets/topbarlogo.png'
 import ProfileImg from '../../../assets/profileimg.png'
 import { BiSolidBell } from "react-icons/bi";
 import { Link } from "react-router-dom";
+import { getMyProfile } from "../../../api/auth";
 
 const Topbar = ({ onOpenSidebar, isSidebarOpen, isMobile }) => {
+
+    const [profile, setProfile] = useState(null)
+
+    const fetchProfile = async () => {
+        let result = await getMyProfile()
+        setProfile(result)
+    }
+
+    useEffect(() => {
+        fetchProfile()
+    }, [])
     return (
         <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-30">
             {/* Hamburger + Logo */}
@@ -22,7 +34,7 @@ const Topbar = ({ onOpenSidebar, isSidebarOpen, isMobile }) => {
             )}
 
             {/* Search Bar */}
-            <div className="flex items-center hidden md:flex border border-[#DBDBDB] bg-gray-100 px-3 py-3 rounded-lg w-full md:w-1/3">
+            <div className="items-center hidden md:flex border border-[#DBDBDB] bg-gray-100 px-3 py-3 rounded-lg w-full md:w-1/3">
                 <Search className="text-black mr-2" size={16} />
                 <input
                     type="text"
@@ -41,7 +53,7 @@ const Topbar = ({ onOpenSidebar, isSidebarOpen, isMobile }) => {
                             alt="user"
                             className="w-12 h-8 object-contain"
                         />
-                        <span className="font-medium font-poppins text-xs hidden md:block pr-3 text-black">Peter Alex</span>
+                        <span className="font-medium font-poppins text-xs hidden md:block pr-3 text-black">{profile?.name || ""}</span>
                     </div>
                 </Link>
 
@@ -61,7 +73,7 @@ const Topbar = ({ onOpenSidebar, isSidebarOpen, isMobile }) => {
                         {/* Bell Icon */}
                         <BiSolidBell size={20} className="text-black" />
 
-                        
+
                         <span className="absolute top-[12px] right-[15px] w-[5px] object-contain h-[5px] bg-red-500 rounded-full"></span>
                     </div>
                 </Link>

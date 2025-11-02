@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-import { FiMoreHorizontal } from "react-icons/fi";
-import { FaRegEye, FaRegThumbsUp, FaRegCommentAlt, FaRegShareSquare } from "react-icons/fa";
-import { IoSend } from "react-icons/io5";
+import React, { useEffect, useState } from "react";
+import { FaRegThumbsUp } from "react-icons/fa";
 import { HiDotsVertical } from "react-icons/hi";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { TbMessage } from "react-icons/tb";
@@ -10,37 +8,49 @@ import { BsSendFill } from "react-icons/bs";
 import GroupsImg from '../../assets/media3.png'
 import NewPostModal from "../../components/Dashboard/Community/NewPost";
 import { Link } from "react-router-dom";
+import { getAllPosts, toggleLikePost, addComment, incrementView } from "../../api/posts";
+import { timeAgo } from "../../utils/util";
 
 const Community = () => {
     const [activeTab, setActiveTab] = useState("all");
     const [isOpen, setIsOpen] = useState(false);
+    const [posts, setPosts] = useState([]);
+    const [commentText, setCommentText] = useState({});
+    const [viewedPosts, setViewedPosts] = useState(new Set());
 
-    const posts = [
-        {
-            id: 1,
-            type: "prayer",
-            user: "Daniel Orleans",
-            time: "40 Mins ago",
-            avatar: null,
-            text: "Please pray for my daughter’s health. She’s undergoing surgery tomorrow and I believe God will heal her. 🙏",
-            views: "12k",
-            likes: "5k",
-            comments: "100",
-            shares: "100",
-        },
-        {
-            id: 2,
-            type: "group",
-            user: "Daniel Orleans",
-            time: "40 Mins ago",
-            avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-            text: "Join our Friday night Bible study live at 7 PM — Let’s dive into the Book of Romans together.",
-            views: "12k",
-            likes: "5k",
-            comments: "100",
-            shares: "100",
-        },
-    ];
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    const fetchPosts = async () => {
+        const allPosts = await getAllPosts();
+        if (allPosts) setPosts(allPosts);
+    };
+
+    const handleLike = async (postId) => {
+        await toggleLikePost(postId);
+        fetchPosts()
+    };
+
+    const handleComment = async (postId, text) => {
+        if (!text.trim()) return;
+        await addComment(postId, text);
+        fetchPosts()
+    };
+
+    const handleView = async (postId) => {
+        if (viewedPosts.has(postId)) return;
+        const updatedViews = await incrementView(postId);
+        setPosts(posts.map(p => p._id === postId ? { ...p, views: updatedViews } : p));
+        setViewedPosts(prev => new Set(prev).add(postId));
+    };
+
+    const handlePostCreated = (newPost) => setPosts([newPost, ...posts]);
+
+    const filteredPosts = posts.filter((post) => {
+        if (activeTab === "all") return true;
+        return post.postType === activeTab;
+    });
 
     const groups = [
         {
@@ -65,12 +75,6 @@ const Community = () => {
             image: GroupsImg,
         },
     ];
-
-    // Filter posts based on activeTab
-    const filteredPosts = posts.filter((post) => {
-        if (activeTab === "all") return true;
-        return post.type === activeTab;
-    });
 
     return (
         <div className="w-full md:px-4">
@@ -110,7 +114,7 @@ const Community = () => {
                 </button>
 
                 {/* Make Post Modal */}
-                {isOpen && <NewPostModal onClose={() => setIsOpen(false)} />}
+                {isOpen && <NewPostModal onPostCreated={handlePostCreated} onClose={() => { setIsOpen(false); fetchPosts() }} />}
             </div>
 
             {/* Main Layout */}
@@ -119,24 +123,24 @@ const Community = () => {
                 <div className="lg:col-span-2 border bg-white p-5 rounded-md space-y-4">
                     {filteredPosts.map((post) => (
                         <div
-                            key={post.id}
+                            key={post._id}
                             className="bg-white rounded-lg shadow border p-4 space-y-3"
                         >
                             {/* Post Header */}
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-1">
-                                    {post.avatar ? (
+                                    {post?.image ? (
                                         <img
-                                            src={post.avatar}
-                                            alt={post.user}
+                                            src={post?.image}
+                                            alt={post?.user?.name}
                                             className="w-14 h-14 rounded-full object-cover"
                                         />
                                     ) : (
                                         <div className="md:w-14 md:h-14 h-10 w-10 rounded-full bg-gray-300"></div>
                                     )}
                                     <div>
-                                        <p className="font-semibold font-poppins">{post.user}</p>
-                                        <p className="text-xs text-gray-500 text-sm font-poppins">{post.time}</p>
+                                        <p className="font-semibold font-poppins">{post.user?.name}</p>
+                                        <p className="text-gray-500 text-sm font-poppins">{timeAgo(post?.createdAt)}</p>
                                     </div>
                                 </div>
                                 <HiDotsVertical className="text-black" />
@@ -144,22 +148,22 @@ const Community = () => {
 
                             {/* Post Text */}
                             <div className="bg-gray-100 px-5 py-4 md:pr-32 rounded-md">
-                                <p className="text-sm text-gray-800 font-poppins">{post.text}</p>
+                                <p className="text-sm text-gray-800 font-poppins">{post?.description}</p>
                             </div>
 
                             {/* Stats */}
                             <div className="flex flex-wrap gap-3 text-sm text-gray-700">
-                                <div className="flex items-center font-poppins cursor-pointer border rounded-md px-3 py-2 gap-1">
+                                <div onClick={() => handleView(post._id)} className="flex items-center font-poppins cursor-pointer border rounded-md px-3 py-2 gap-1">
                                     <MdOutlineRemoveRedEye /> {post.views}
                                 </div>
-                                <div className="flex items-center border font-poppins rounded-md cursor-pointer px-3 py-2 gap-1">
-                                    <FaRegThumbsUp /> {post.likes}
+                                <div onClick={() => handleLike(post._id)} className="flex items-center border font-poppins rounded-md cursor-pointer px-3 py-2 gap-1">
+                                    <FaRegThumbsUp /> {post?.likes?.length}
                                 </div>
                                 <div className="flex items-center border rounded-md font-poppins cursor-pointer px-3 py-2 gap-1">
-                                    <TbMessage /> {post.comments}
+                                    <TbMessage /> {post.comments?.length}
                                 </div>
                                 <div className="flex items-center border rounded-md font-poppins cursor-pointer px-3 py-2 gap-1">
-                                    <RiShareForwardLine /> {post.shares}
+                                    <RiShareForwardLine /> {0}
                                 </div>
                             </div>
 
@@ -169,8 +173,21 @@ const Community = () => {
                                     type="text"
                                     placeholder="Add comments"
                                     className="flex-1 border bg-gray-100 rounded px-3 py-3 text-sm focus:outline-none"
+                                    value={commentText[post._id] || ""}
+                                    onChange={(e) =>
+                                        setCommentText((prev) => ({ ...prev, [post._id]: e.target.value }))
+                                    }
+                                    onKeyDown={async (e) => {
+                                        if (e.key === "Enter") {
+                                            await handleComment(post._id, commentText[post._id]);
+                                            setCommentText((prev) => ({ ...prev, [post._id]: "" }));
+                                        }
+                                    }}
                                 />
-                                <button className="bg-sky-400 text-white py-[15px] px-4 rounded">
+                                <button className="bg-sky-400 text-white py-[15px] px-4 rounded" onClick={async () => {
+                                    await handleComment(post._id, commentText[post._id]);
+                                    setCommentText((prev) => ({ ...prev, [post._id]: "" }));
+                                }}>
                                     <BsSendFill />
                                 </button>
                             </div>

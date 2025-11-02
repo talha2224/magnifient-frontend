@@ -7,7 +7,7 @@ const hideLoadingToast = (id) => toast.dismiss(id);
 export const registerUser = async (email, password, name = "") => {
   const toastId = showLoadingToast("Creating account...");
   try {
-    const { data } = await api.post("/register", { email, password, name });
+    const { data } = await api.post("/account/register", { email, password, name });
     hideLoadingToast(toastId);
     toast.success("Account created successfully!");
     localStorage.setItem("token", data.data.token);
@@ -22,7 +22,7 @@ export const registerUser = async (email, password, name = "") => {
 export const loginUser = async (email, password) => {
   const toastId = showLoadingToast("Logging in...");
   try {
-    const { data } = await api.post("/login", { email, password });
+    const { data } = await api.post("/account/login", { email, password });
     hideLoadingToast(toastId);
     toast.success("Login successful!");
     localStorage.setItem("token", data.data.token);
@@ -37,7 +37,7 @@ export const loginUser = async (email, password) => {
 
 export const getMyProfile = async () => {
   try {
-    const { data } = await api.get("/me");
+    const { data } = await api.get("/account/me");
     return data.data;
   } catch (err) {
     console.error(err);
@@ -47,7 +47,7 @@ export const getMyProfile = async () => {
 export const updateProfile = async (payload) => {
   const toastId = showLoadingToast("Updating profile...");
   try {
-    const { data } = await api.put("/me", payload);
+    const { data } = await api.put("/account/me", payload);
     hideLoadingToast(toastId);
     toast.success("Profile updated!");
     return data.data;
@@ -61,7 +61,7 @@ export const updateProfile = async (payload) => {
 export const resendOtp = async (email) => {
   const toastId = showLoadingToast("Resending OTP...");
   try {
-    const { data } = await api.get(`/resend-otp/${email}`);
+    const { data } = await api.get(`/account/resend-otp/${email}`);
     hideLoadingToast(toastId);
     toast.success(data.msg || "OTP sent successfully!");
     return data;
@@ -75,7 +75,7 @@ export const resendOtp = async (email) => {
 export const verifyOtp = async (email, otp) => {
   const toastId = showLoadingToast("Verifying OTP...");
   try {
-    const { data } = await api.post("/verify-otp", { email, otp });
+    const { data } = await api.post("/account/verify-otp", { email, otp });
     hideLoadingToast(toastId);
     toast.success(data.msg || "OTP verified successfully!");
     return data;
@@ -89,7 +89,7 @@ export const verifyOtp = async (email, otp) => {
 export const changePassword = async (email, password) => {
   const toastId = showLoadingToast("Changing password...");
   try {
-    const { data } = await api.post("/change-password", { email, password });
+    const { data } = await api.post("/account/change-password", { email, password });
     hideLoadingToast(toastId);
     toast.success(data.msg || "Password changed successfully!");
     return data;

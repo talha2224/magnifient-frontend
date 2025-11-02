@@ -1,42 +1,51 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { FaImage } from "react-icons/fa";
+import { createPost } from "../../../api/posts";
 
-const NewPostModal = ({ onClose }) => {
+const NewPostModal = ({ onClose, onPostCreated }) => {
     const fileInputRef = useRef(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [description, setDescription] = useState("");
+    const [postType, setPostType] = useState("text");
+    const [category, setCategory] = useState("single");
 
-    const handleUploadClick = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click();
+    const handleUploadClick = () => fileInputRef.current?.click();
+
+    const handleFileChange = (e) => setImageFile(e.target.files[0]);
+
+    const handlePost = async () => {
+        const post = await createPost({ description, postType, category, imageFile });
+        if (post) {
+            onPostCreated(post);
+            onClose();
         }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-5 relative">
-                {/* Close Button */}
                 <button
                     onClick={onClose}
                     className="absolute mt-4 mr-3 bg-gray-300 rounded-full top-3 right-3 text-white p-1"
                 >
                     <X size={10} />
                 </button>
-
-                {/* Title */}
                 <h2 className="text-center font-poppins text-lg font-semibold mb-8">
                     Create new post
                 </h2>
 
-                {/* Post type & Upload image */}
                 <div className="flex justify-between md:gap-48 gap-14 mb-4">
-                    <select className="flex-1 font-poppins border rounded-md p-2 text-xs">
-                        <option>Post type</option>
-                        <option>Text</option>
-                        <option>Image</option>
-                        <option>Video</option>
+                    <select
+                        className="flex-1 font-poppins border rounded-md p-2 text-xs"
+                        value={postType}
+                        onChange={(e) => setPostType(e.target.value)}
+                    >
+                        <option value="text">Text</option>
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
                     </select>
 
-                    {/* Upload Button */}
                     <button
                         onClick={handleUploadClick}
                         className="flex-1 flex items-center font-poppins justify-center gap-2 border rounded-md px-3 py-2 text-xs"
@@ -45,23 +54,23 @@ const NewPostModal = ({ onClose }) => {
                         Upload Image
                     </button>
 
-                    {/* Hidden File Input */}
                     <input
                         type="file"
                         accept="image/*"
                         ref={fileInputRef}
                         className="hidden"
+                        onChange={handleFileChange}
                     />
                 </div>
 
-                {/* Write post */}
                 <textarea
                     rows="4"
                     placeholder="Write posts"
                     className="w-full border rounded-md focus:outline-none font-poppins bg-gray-100 p-2 text-sm mb-2 resize-none"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                 />
 
-                {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
                     {["Faith", "Healing", "Joy", "Giving", "Prayer requests"].map(
                         (tag, idx) => (
@@ -78,8 +87,10 @@ const NewPostModal = ({ onClose }) => {
                     )}
                 </div>
 
-                {/* Post Button */}
-                <button className="w-full bg-[#3CCDF8] font-poppins text-white py-2 rounded-md font-medium">
+                <button
+                    onClick={handlePost}
+                    className="w-full bg-[#3CCDF8] font-poppins text-white py-2 rounded-md font-medium"
+                >
                     Post
                 </button>
             </div>

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { loginUser } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 
 const SignInModal = ({ isOpen, onClose, switchToSignup, onForgotPassword, onContinue }) => {
     const [email, setEmail] = useState("");
@@ -24,6 +26,26 @@ const SignInModal = ({ isOpen, onClose, switchToSignup, onForgotPassword, onCont
             console.error(error);
         }
     }
+
+    const handleGoogleAuth = async (credentialResponse) => {
+        try {
+            const decoded = jwtDecode(credentialResponse.credential);
+            const googleEmail = decoded.email;
+            const googlePassword = decoded.sub;
+            try {
+                const res = await loginUser(googleEmail, googlePassword);
+                if (res) {
+                    setEmail("")
+                    setPassword("")
+                    navigate("/mainhome");
+                }
+            } catch {
+                toast.error("Login with google failed");
+            }
+        } catch {
+            toast.error("Login with google failed");
+        }
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -51,16 +73,19 @@ const SignInModal = ({ isOpen, onClose, switchToSignup, onForgotPassword, onCont
                 </h2>
 
                 {/* Google Button */}
-                <button className="w-full flex items-center justify-center gap-2 border border-[#E6E6E6] rounded-md py-3 mb-4 bg-[#FBFBFB]">
-                    <img
-                        src="https://www.svgrepo.com/show/355037/google.svg"
-                        alt="Google"
-                        className="w-4 h-4 object-contain"
-                    />
-                    <span className="text-xs sm:text-sm text-black font-poppins font-medium">
-                        Sign in with Google
-                    </span>
-                </button>
+                <GoogleLogin text="Continue with Google" onSuccess={handleGoogleAuth} onError={() => toast.error("Login with google failed")}>
+                    <button className="w-full flex items-center justify-center gap-2 border border-[#E6E6E6] rounded-md py-3 mb-4 bg-[#FBFBFB]">
+                        <img
+                            src="https://www.svgrepo.com/show/355037/google.svg"
+                            alt="Google"
+                            className="w-4 h-4 object-contain"
+                        />
+                        <span className="text-xs sm:text-sm text-black font-poppins font-medium">
+                            Sign in with Google
+                        </span>
+                    </button>
+
+                </GoogleLogin>
 
                 <div className="flex items-center mb-2">
                     <div className="flex-1 border-t" />

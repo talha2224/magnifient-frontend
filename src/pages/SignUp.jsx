@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { registerUser } from "../api/auth";
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 
 const SignupModal = ({ isOpen, onClose, switchToSignin, onContinue }) => {
     const [step, setStep] = useState(1);
@@ -34,6 +36,31 @@ const SignupModal = ({ isOpen, onClose, switchToSignin, onContinue }) => {
         }
     };
 
+
+    const handleGoogleSignup = async (credentialResponse) => {
+        try {
+            const decoded = jwtDecode(credentialResponse.credential);
+            const googleEmail = decoded.email;
+            const googlePassword = decoded.sub;
+            const googleName = decoded.name;
+            if (googlePassword && googlePassword) {
+                try {
+                    const res = await registerUser(googleEmail, googlePassword, googleName);
+                    if (res) {
+                        setEmail("")
+                        setPassword("")
+                        onContinue();
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+        } catch {
+            toast.error("Registration Failed");
+        }
+    };
+
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
             <div className="relative bg-white w-full max-w-[90%] sm:max-w-lg md:max-w-xl rounded-lg shadow-lg px-6 py-8 sm:px-16 sm:py-12 md:px-28 md:py-16">
@@ -62,16 +89,18 @@ const SignupModal = ({ isOpen, onClose, switchToSignin, onContinue }) => {
                 {/* Step 1 */}
                 {step === 1 && (
                     <>
-                        <button className="w-full flex items-center justify-center gap-2 border border-[#E6E6E6] rounded-md py-3 mb-4 bg-[#FBFBFB]">
-                            <img
-                                src="https://www.svgrepo.com/show/355037/google.svg"
-                                alt="Google"
-                                className="w-4 h-4 object-contain"
-                            />
-                            <span className="text-xs sm:text-sm text-black font-poppins font-medium">
-                                Continue with Google
-                            </span>
-                        </button>
+                        <GoogleLogin text="Continue with Google" onSuccess={handleGoogleSignup} onError={() => toast.error("Registration with google failed")}>
+                            <button className="w-full flex items-center justify-center gap-2 border border-[#E6E6E6] rounded-md py-3 mb-4 bg-[#FBFBFB]">
+                                <img
+                                    src="https://www.svgrepo.com/show/355037/google.svg"
+                                    alt="Google"
+                                    className="w-4 h-4 object-contain"
+                                />
+                                <span className="text-xs sm:text-sm text-black font-poppins font-medium">
+                                    Continue with Google
+                                </span>
+                            </button>
+                        </GoogleLogin>
 
                         <div className="flex items-center mb-2">
                             <div className="flex-1 border-t" />
